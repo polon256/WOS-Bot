@@ -179,8 +179,6 @@ class Alliance(commands.Cog):
                     "└ Manage gift codes and rewards\n\n"
                     "📜 **Alliance History**\n"
                     "└ View alliance changes and history\n\n"
-                    "🆘 **Support Operations**\n"
-                    "└ Access support features\n"
                     "━━━━━━━━━━━━━━━━━━━━━━"
                 ),
                 color=discord.Color.blue()
@@ -206,6 +204,7 @@ class Alliance(commands.Cog):
                 emoji="🤖",
                 style=discord.ButtonStyle.primary,
                 custom_id="bot_operations",
+                disabled=admin[1] != 1,
                 row=1
             ))
             view.add_item(discord.ui.Button(
@@ -223,18 +222,11 @@ class Alliance(commands.Cog):
                 row=2
             ))
             view.add_item(discord.ui.Button(
-                label="Support Operations",
-                emoji="🆘",
-                style=discord.ButtonStyle.primary,
-                custom_id="support_operations",
-                row=2
-            ))
-            view.add_item(discord.ui.Button(
                 label="Other Features",
                 emoji="🔧",
                 style=discord.ButtonStyle.primary,
                 custom_id="other_features",
-                row=3
+                row=2
             ))
 
             if admin_count == 0:
@@ -327,6 +319,12 @@ class Alliance(commands.Cog):
 
                     await interaction.response.edit_message(embed=embed, view=view)
 
+                elif custom_id == "edit_alliance":
+                    if admin[1] != 1:
+                        await interaction.response.send_message("You do not have permission to perform this action.", ephemeral=True)
+                        return
+                    await self.edit_alliance(interaction)
+
                 elif custom_id == "check_alliance":
                     is_initial = admin[1]
 
@@ -356,15 +354,6 @@ class Alliance(commands.Cog):
                             """, (alliance_id,))
                             admin_alliances.append(self.c.fetchone())
                         alliances = admin_alliances
-
-                elif custom_id == "check_alliance":
-                    self.c.execute("""
-                        SELECT a.alliance_id, a.name, COALESCE(s.interval, 0) as interval
-                        FROM alliance_list a
-                        LEFT JOIN alliancesettings s ON a.alliance_id = s.alliance_id
-                        ORDER BY a.name
-                    """)
-                    alliances = self.c.fetchall()
 
                     if not alliances:
                         await interaction.response.send_message("No alliances found to check.", ephemeral=True)
@@ -422,6 +411,8 @@ class Alliance(commands.Cog):
                                     color=discord.Color.blue()
                                 )
                                 await select_interaction.response.send_message(embed=progress_embed)
+                                msg = await select_interaction.original_response()
+                                message_id = msg.id
                                 
                                 for index, (alliance_id, name, _) in enumerate(alliances):
                                     try:
@@ -440,7 +431,10 @@ class Alliance(commands.Cog):
                                             ),
                                             color=discord.Color.blue()
                                         )
-                                        await select_interaction.edit_original_response(embed=queue_status_embed)
+                                        channel = select_interaction.channel
+                                        msg = await channel.fetch_message(message_id)
+                                        await msg.edit(embed=queue_status_embed)
+
                                         
                                         self.c.execute("""
                                             SELECT channel_id FROM alliancesettings WHERE alliance_id = ?
@@ -477,7 +471,9 @@ class Alliance(commands.Cog):
                                     ),
                                     color=discord.Color.green()
                                 )
-                                await select_interaction.edit_original_response(embed=queue_complete_embed)
+                                channel = select_interaction.channel
+                                msg = await channel.fetch_message(message_id)
+                                await msg.edit(embed=queue_complete_embed)
                             
                             else:
                                 alliance_id = int(selected_value)
@@ -1236,8 +1232,6 @@ class Alliance(commands.Cog):
                     "└ Manage gift codes and rewards\n\n"
                     "📜 **Alliance History**\n"
                     "└ View alliance changes and history\n\n"
-                    "🆘 **Support Operations**\n"
-                    "└ Access support features\n"
                     "━━━━━━━━━━━━━━━━━━━━━━"
                 ),
                 color=discord.Color.blue()
@@ -1280,18 +1274,11 @@ class Alliance(commands.Cog):
                 row=2
             ))
             view.add_item(discord.ui.Button(
-                label="Support Operations",
-                emoji="🆘",
-                style=discord.ButtonStyle.primary,
-                custom_id="support_operations",
-                row=2
-            ))
-            view.add_item(discord.ui.Button(
                 label="Other Features",
                 emoji="🔧",
                 style=discord.ButtonStyle.primary,
                 custom_id="other_features",
-                row=3
+                row=2
             ))
 
 
@@ -1339,8 +1326,6 @@ class Alliance(commands.Cog):
                     "└ Manage gift codes and rewards\n\n"
                     "📜 **Alliance History**\n"
                     "└ View alliance changes and history\n\n"
-                    "🆘 **Support Operations**\n"
-                    "└ Access support features\n\n"
                     "🔧 **Other Features**\n"
                     "└ Access other features\n"
                     "━━━━━━━━━━━━━━━━━━━━━━"
@@ -1385,18 +1370,11 @@ class Alliance(commands.Cog):
                 row=2
             ))
             view.add_item(discord.ui.Button(
-                label="Support Operations",
-                emoji="🆘",
-                style=discord.ButtonStyle.primary,
-                custom_id="support_operations",
-                row=2
-            ))
-            view.add_item(discord.ui.Button(
                 label="Other Features",
                 emoji="🔧",
                 style=discord.ButtonStyle.primary,
                 custom_id="other_features",
-                row=3
+                row=2
             ))
 
             try:
